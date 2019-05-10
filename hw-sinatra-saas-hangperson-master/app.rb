@@ -29,7 +29,7 @@ class HangpersonApp < Sinatra::Base
     # NOTE: don't change next line - it's needed by autograder!
     word = params[:word] || HangpersonGame.get_random_word
     # NOTE: don't change previous line - it's needed by autograder!
-
+    
     @game = HangpersonGame.new(word)
     redirect '/show'
   end
@@ -37,26 +37,20 @@ class HangpersonApp < Sinatra::Base
   # Use existing methods in HangpersonGame to process a guess.
   # If a guess is repeated, set flash[:message] to "You have already used that letter."
   # If a guess is invalid, set flash[:message] to "Invalid guess."
-  
   post '/guess' do
-    letter = params[:guess].to_s[0]
-   
-    if @game.guess(letter)==false
-      flash[:message]="You have already used that letter"
-   elsif @game.wrong_guesses.include?(letter)
-    flash[:message]="Invalid guess"
+    
+    # handle error
+
+    letter = params[:guess].to_s[0] || ""
+    ### YOUR CODE HERE ###
+    begin
+      flash[:message] = "You have already used that letter." unless @game.guess(letter)
+    rescue 
+      flash[:message] = "Invalid guess."
+    end
+    redirect '/show'  
   end
-    flash[:wrong_guesses]=@game.wrong_guesses
-    flash[:word_with_guesses]=@game.word_with_guesses    
-   
-   if @game.check_win_or_lose==:win
-     redirect "/win"
-   elsif @game.check_win_or_lose==:play
-   redirect "/show"
-   elsif @game.check_win_or_lose== :lose
-   redirect '/lose'
-  end
-  end
+
   
   # Everytime a guess is made, we should eventually end up at this route.
   # Use existing methods in HangpersonGame to check if player has
@@ -64,17 +58,25 @@ class HangpersonApp < Sinatra::Base
   # Notice that the show.erb template expects to use the instance variables
   # wrong_guesses and word_with_guesses from @game.
   get '/show' do
-    ### YOUR CODE HERE ###
-    erb :show # You may change/remove this line
+    case @game.check_win_or_lose
+    when :win
+      redirect '/win'
+    when :lose
+      redirect '/lose'
+    else
+      erb :show # You may change/remove this line
+    end
   end
   
   get '/win' do
     ### YOUR CODE HERE ###
+    redirect '/show' if @game.check_win_or_lose == :play
     erb :win # You may change/remove this line
   end
   
   get '/lose' do
     ### YOUR CODE HERE ###
+    redirect '/show' if @game.check_win_or_lose == :play
     erb :lose # You may change/remove this line
   end
   
